@@ -7,8 +7,13 @@
 
 import UIKit
 import SnapKit
+import CoreLocation
 
-class ViewController: UIViewController {
+
+class ViewController: UIViewController, CLLocationManagerDelegate{
+    
+    private let locationManager = CLLocationManager()
+    private let weatherService: WeatherService = WeatherServiceDefault()
 
     let cityName: UILabel = {
         let city = UILabel()
@@ -39,7 +44,7 @@ class ViewController: UIViewController {
         return sunriseTime
     }()
     
-    let sunsetTime: UILabel = {
+    private let sunsetTime: UILabel = {
         let sunsetTime = UILabel()
         sunsetTime.text = "20:00"
         sunsetTime.alpha = 0.5
@@ -71,8 +76,11 @@ class ViewController: UIViewController {
         return sunrise
     }()
     
-    let sun = UIView(frame: CGRect(x: 0, y: 0, width: 348, height: 348))
-
+    
+    let sun = UIView()
+    var heightSun = -340
+    
+    
     let secDay = UILabel()
     let thDay = UILabel()
     let foDay = UILabel()
@@ -81,21 +89,22 @@ class ViewController: UIViewController {
     let sevDay = UILabel()
     let daysMok: [String] = ["Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
     
-    let secWeather = UIImageView()
-    let thWeather = UIImageView()
-    let foWeather = UIImageView()
-    let fiWeather = UIImageView()
-    let sixWeather = UIImageView()
-    let sevWeather = UIImageView()
-    let iconsMok: [UIImage] = [UIImage(named: "CloudyIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!]
     
-    let secTemp = UILabel()
-    let thTemp = UILabel()
-    let foTemp = UILabel()
-    let fiTemp = UILabel()
-    let sixTemp = UILabel()
-    let sevTemp = UILabel()
-    let tempMock: [String] = ["24°", "19°", "22°", "10°", "21°", "25°",]
+    var secWeather = UIImageView()
+    var thWeather = UIImageView()
+    var foWeather = UIImageView()
+    var fiWeather = UIImageView()
+    var sixWeather = UIImageView()
+    var sevWeather = UIImageView()
+    var iconsMok: [UIImage] = [UIImage(named: "CloudyIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!, UIImage(named: "RainIcon")!]
+    
+    var secTemp = UILabel()
+    var thTemp = UILabel()
+    var foTemp = UILabel()
+    var fiTemp = UILabel()
+    var sixTemp = UILabel()
+    var sevTemp = UILabel()
+    var tempMock: [String] = ["24°", "19°", "22°", "10°", "21°", "25°",]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -106,17 +115,22 @@ class ViewController: UIViewController {
             view.addSubview(views)
 
         }
+        
         setup()
+        
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
     }
-        
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+
+        guard let location = locations.first else { return }
+        locationManager.stopUpdatingLocation()
+        weatherService.getWeather(for: location)
+    }
+    
     func setup(){
-        
-        sun.layer.cornerRadius = 174
-        sun.backgroundColor = .red
-        sun.snp.makeConstraints{
-            $0.centerX.equalToSuperview()
-            $0.top.equalToSuperview().inset(-250)
-        }
         
         let temps: [UILabel] = [secTemp, thTemp, foTemp, fiTemp, sixTemp, sevTemp]
         for (index, temp) in temps.enumerated(){
@@ -133,7 +147,6 @@ class ViewController: UIViewController {
             
         }
 
-        
         let weathers: [UIImageView] = [secWeather, thWeather, foWeather, fiWeather, sixWeather, sevWeather]
         for (index, icon) in weathers.enumerated(){
             icon.image = iconsMok[index]
@@ -159,6 +172,14 @@ class ViewController: UIViewController {
                     $0.top.equalTo(days[index - 1]).inset(40)
                 }
             }
+        }
+        
+        sun.layer.cornerRadius = 174
+        sun.backgroundColor = .red
+        sun.snp.makeConstraints{
+            $0.size.equalTo(348)
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalToSuperview().inset(heightSun)
         }
 
 
@@ -208,6 +229,8 @@ class ViewController: UIViewController {
         }
 
     }
+    
+    
     
 }
     
